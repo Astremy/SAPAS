@@ -23,9 +23,9 @@ def methods(*args):
 		return verif
 	return methods_verif
 
-def find_css(filename):
+def find_file(filename):
 	try:
-		with open("css/"+filename,"r") as file:
+		with open("files/"+filename,"r") as file:
 			data = file.read()
 			return data
 	except:
@@ -38,14 +38,14 @@ class Request():
 		self.url = url.split("?")[0]
 		self.form = None
 		self.search_url(url)
-		self.serch_post(post)
+		self.search_post(post)
 
 	def search_url(self,url):
 		url = url.split("?")
 		if len(url) > 1:
 			self.set_form(url[1])
 
-	def serch_post(self,post):
+	def search_post(self,post):
 		if not post == "":
 			self.set_form(post)
 
@@ -63,6 +63,7 @@ class User:
 		self.request = request
 		self.cookies = self.get_cookies()
 		self.cookies_to_set = {}
+		self.accept = self.search_accept(infos)
 
 	def set_cookie(self,cookie,value):
 		self.cookies_to_set[cookie] = value
@@ -79,6 +80,11 @@ class User:
 				break
 		return cookies
 
+	def search_accept(self,infos):
+		zone = infos.split("Accept: ")[1]
+		accept = zone.split(",")[0]
+		return accept
+
 class Process(Thread):
 
 	def __init__(self,page,client,infos):
@@ -88,20 +94,19 @@ class Process(Thread):
 		self.infos = infos
 
 	def run(self):
-		if type(self.page) == str:
-			if self.page.startswith("/css/"):
-				reponse = find_css(self.page[5:])
-				response_css = "HTTP/1.0 200 OK\r\nContent-Type: text/css\r\n\r\n"+reponse
-				self.client.send(response_css.encode('utf-8'))
-				return self.client.close()
-
 
 		user = self.create_user()
-		reponse = self.page(user)
 		cookies = ""
-		for i,j in user.cookies_to_set.items():
-			cookies += "Set-Cookie: "+str(i)+"="+str(j)+"\r\n"
-		response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n"+cookies+"\r\n"+reponse
+
+		if type(self.page) == str:
+			if self.page.startswith("/file/"):
+				reponse = find_file(self.page[5:])
+		else:
+			reponse = self.page(user)
+			for i,j in user.cookies_to_set.items():
+				cookies += "Set-Cookie: "+str(i)+"="+str(j)+"\r\n"
+
+		response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: "+user.accept+"\r\n"+cookies+"\r\n"+reponse
 		#print("Reponse : ",response_to_client)
 		self.client.send(response_to_client.encode('utf-8'))
 		self.client.close()
@@ -142,9 +147,9 @@ class Server:
 		while self.work:
 			connect_client, nothing = connect_main.accept()
 			infos = connect_client.recv(1024).decode('utf-8')
-			data = infos.split("\n")
+			data = infos.split("\r\n")
 			protocol = data[0].split(" ")
-			print(infos)
+			#print(infos)
 
 			try:
 				request_page = protocol[1].split("?")[0]
@@ -153,13 +158,11 @@ class Server:
 
 			print("Request : "+request_page)
 
-			if request_page.startswith("/css/"):
+			if request_page.startswith("/file/"):
 				print("Result : Okay")
 				client = Process(request_page,connect_client,infos)
 				client.start()
-				continue
-
-			if request_page in self.url:
+			elif request_page in self.url:
 				print("Result : Okay")
 				client = Process(self.url[request_page],connect_client,infos)
 				client.start()
