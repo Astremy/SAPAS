@@ -19,6 +19,7 @@ Autorisation de certaines méthodes spécifiques avec le décorateur @methods()
 
 
 1.0.2 :
+
 Ajout de la capacité à supporter les requetes post ainsi que get a formulaire.
 Récupération des formulaires (user.request.form)
 Ajout de la possibilité de mettre des liens css et js dans les templates.
