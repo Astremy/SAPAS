@@ -2,7 +2,7 @@ import socket
 from threading import Thread
 
 def redirect(url):
-	return "<script>window.location.href='"+url+"'</script>"
+	return "<script>window.location.href='"+url+"';</script>"
 
 def template(filename,**kwargs):
 	try:
@@ -43,8 +43,8 @@ class Request():
 
 	def __init__(self,method,url,post):
 		self.method = method
-		self.url = url.split("?")[0]
-		self.form = None
+		self.url = url
+		self.form = {}
 		self.search_url(url)
 		self.search_post(post)
 
@@ -71,10 +71,14 @@ class User:
 		self.request = request
 		self.cookies = self.get_cookies()
 		self.cookies_to_set = {}
+		self.cookies_to_delete = []
 		self.accept = self.search_accept(infos)
 
 	def set_cookie(self,cookie,value):
 		self.cookies_to_set[cookie] = value
+
+	def delete_cookie(self,cookie):
+		self.cookies_to_delete.append(cookie)
 
 	def get_cookies(self):
 		data = self.infos.split("\r\n")
@@ -86,6 +90,7 @@ class User:
 					cookie = cookie.split("=")
 					cookies[cookie[0]] = cookie[1]
 				break
+		#print(cookies)
 		return cookies
 
 	def search_accept(self,infos):
@@ -120,10 +125,12 @@ class Process(Thread):
 			reponse = self.page(user)
 			for i,j in user.cookies_to_set.items():
 				cookies += "Set-Cookie: "+str(i)+"="+str(j)+"\r\n"
+			for i in user.cookies_to_delete:
+				cookies += "Set-Cookie: "+str(i)+"=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n"
 
 		response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: "+user.accept+"\r\n"+cookies+"\r\n"+reponse
 		#print("Reponse : ",response_to_client)
-		self.client.send(response_to_client.encode("UTF-8"))
+		self.client.send(response_to_client.encode("utf-8"))
 		self.client.close()
 
 	def create_user(self):
@@ -156,12 +163,12 @@ class Server:
 		self.work = 1
 		connect_main = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		connect_main.bind((self.host,self.port))
-		connect_main.listen(5)
+		connect_main.listen(10)
 		print("Server Start")
 
 		while self.work:
 			connect_client, nothing = connect_main.accept()
-			infos = connect_client.recv(1024).decode("UTF-8")
+			infos = connect_client.recv(16777216).decode("utf-8")
 			data = infos.split("\r\n")
 			protocol = data[0].split(" ")
 			#print(infos)
