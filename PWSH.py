@@ -9,6 +9,14 @@ def template(filename,**kwargs):
 		with open("templates/"+filename,"r") as file:
 			data = file.read()
 			response = data.format(**kwargs)
+			def search(response):
+				import_html = response.split("&&&")
+				for i in range(len(import_html)):
+					if i%2:
+						import_html[i] = template(import_html[i],**kwargs)
+				response = "".join(import_html)
+				return response
+			response = search(response)
 			return response
 	except:
 		return ""
@@ -81,8 +89,15 @@ class User:
 		return cookies
 
 	def search_accept(self,infos):
-		zone = infos.split("Accept: ")[1]
-		accept = zone.split(",")[0]
+		try:
+			zone = infos.split("Accept: ")[1]
+			accept = zone.split(",")[0]
+		except:
+			data = infos.split("\r\n")
+			data = data[0].split(" ")
+			data = data[1].split(".")
+			extension = data[1]
+			accept = "text/"+extension
 		return accept
 
 class Process(Thread):
@@ -108,12 +123,12 @@ class Process(Thread):
 
 		response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: "+user.accept+"\r\n"+cookies+"\r\n"+reponse
 		#print("Reponse : ",response_to_client)
-		self.client.send(response_to_client.encode('utf-8'))
+		self.client.send(response_to_client.encode("UTF-8"))
 		self.client.close()
 
 	def create_user(self):
 		data = self.infos.split("\r\n")
-		print(data)
+		#print(data)
 		protocol = data[0].split(" ")
 		request = Request(protocol[0],protocol[1],data[-1])
 		user = User(self.infos,request)
@@ -146,7 +161,7 @@ class Server:
 
 		while self.work:
 			connect_client, nothing = connect_main.accept()
-			infos = connect_client.recv(1024).decode('utf-8')
+			infos = connect_client.recv(1024).decode("UTF-8")
 			data = infos.split("\r\n")
 			protocol = data[0].split(" ")
 			#print(infos)
