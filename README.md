@@ -25,3 +25,8 @@ Récupération des formulaires (user.request.form)
 Ajout de la possibilité de mettre des liens css et js dans les templates.
 Refonte de la réponse -> Plus forcément "text/html".
 Maintenant cela répond en fonction des réponses acceptées.
+
+1.0.3 :
+
+Capacité à import d'autres template dans un template avec &&&filename&&& dans le fichier html.
+Possibilité de télécharger le contenu (avec l'attribut download de la balise a).
