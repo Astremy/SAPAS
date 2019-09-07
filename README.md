@@ -30,3 +30,8 @@ Maintenant cela répond en fonction des réponses acceptées.
 
 Capacité à import d'autres template dans un template avec &&&filename&&& dans le fichier html.
 Possibilité de télécharger le contenu (avec l'attribut download de la balise a).
+
+1.0.4 :
+Augmentation du buffsize, pour permettre plus de cookies, ou plus de données a travers les requetes/formulaires.
+Ajout d'un système pour enlever un cookie.
+Compatibilité accrue pour le contenu.
