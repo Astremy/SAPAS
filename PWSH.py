@@ -27,7 +27,21 @@ def methods(*args):
 			if user.request.method in args:
 				return func(user)
 			else:
+				if "bad_request" in user.__urls__:
+					return user.__urls__["bad request"]()
 				return "Mauvaise methode de requete"
+		return verif
+	return methods_verif
+
+def need_cookies(*args):
+	def methods_verif(func):
+		def verif(user):
+			for arg in args:
+				if arg not in user.cookies.keys():
+					if "bad_cookie" in user.__urls__:
+						return user.__urls__["bad_cookie"]()
+					return "Mauvaise methode de requete"
+			return func(user)
 		return verif
 	return methods_verif
 
@@ -66,13 +80,14 @@ class Request():
 
 class User:
 
-	def __init__(self,infos,request):
+	def __init__(self,infos,request,__urls__):
 		self.infos = infos
 		self.request = request
 		self.cookies = self.get_cookies()
 		self.cookies_to_set = {}
 		self.cookies_to_delete = []
 		self.accept = self.search_accept(infos)
+		self.__urls__ = __urls__
 
 	def set_cookie(self,cookie,value):
 		self.cookies_to_set[cookie] = value
@@ -107,11 +122,12 @@ class User:
 
 class Process(Thread):
 
-	def __init__(self,page,client,infos):
+	def __init__(self,page,client,infos,urls={}):
 		Thread.__init__(self)
 		self.page = page
 		self.client = client
 		self.infos = infos
+		self.__urls__ = urls
 
 	def run(self):
 
@@ -138,7 +154,7 @@ class Process(Thread):
 		#print(data)
 		protocol = data[0].split(" ")
 		request = Request(protocol[0],protocol[1],data[-1])
-		user = User(self.infos,request)
+		user = User(self.infos,request,self.__urls__)
 		return user
 
 class Server:
@@ -186,11 +202,15 @@ class Server:
 				client.start()
 			elif request_page in self.url:
 				print("Result : Okay")
-				client = Process(self.url[request_page],connect_client,infos)
+				client = Process(self.url[request_page],connect_client,infos,urls=self.url)
 				client.start()
 			else:
 				print("Result : Not Found")
+				if "error" in self.url:
+					client = Process(self.url["error"],connect_client,infos)
+					return client.start()
 				connect_client.send("HTTP/1.1 404 Not Found\n\n<html><body><center><h3>Error 404</h3></center></body></html>".encode('utf-8'))
+				connect_client.close()
 
 		print("Stopping Server")
 
