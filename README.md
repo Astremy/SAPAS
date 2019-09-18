@@ -35,3 +35,9 @@ Possibilité de télécharger le contenu (avec l'attribut download de la balise 
 Augmentation du buffsize, pour permettre plus de cookies, ou plus de données a travers les requetes/formulaires.
 Ajout d'un système pour enlever un cookie.
 Compatibilité accrue pour le contenu.
+
+1.0.5 :
+Ajout du décorateur @need_cookies().
+
+1.1.0 :
+Refonte d'une partie de la reception des requetes. Mise en place de la possibilité de fermer le programme normalement (Ctrl+C)
