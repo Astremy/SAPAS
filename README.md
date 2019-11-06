@@ -32,12 +32,20 @@ Capacité à import d'autres template dans un template avec &&&filename&&& dans 
 Possibilité de télécharger le contenu (avec l'attribut download de la balise a).
 
 1.0.4 :
+
 Augmentation du buffsize, pour permettre plus de cookies, ou plus de données a travers les requetes/formulaires.
 Ajout d'un système pour enlever un cookie.
 Compatibilité accrue pour le contenu.
 
 1.0.5 :
+
 Ajout du décorateur @need_cookies().
 
 1.1.0 :
+
 Refonte d'une partie de la reception des requetes. Mise en place de la possibilité de fermer le programme normalement (Ctrl+C)
+
+1.1.1:
+
+Correction de différents bugs. L'on est plus obligé de passer en argument "user" si l'on ne l'utilise pas.
+
