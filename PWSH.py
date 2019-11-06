@@ -28,7 +28,10 @@ def methods(*args):
 				return func(user)
 			else:
 				if "bad_request" in user.__urls__:
-					return user.__urls__["bad request"]()
+					if "user" in func.__code__.co_varnames[:func.__code__.co_argcount]:
+						return user.__urls__["bad request"](user)
+					else:
+						return user.__urls__["bad request"]()
 				return "Mauvaise methode de requete"
 		return verif
 	return methods_verif
@@ -39,7 +42,10 @@ def need_cookies(*args):
 			for arg in args:
 				if arg not in user.cookies.keys():
 					if "bad_cookie" in user.__urls__:
-						return user.__urls__["bad_cookie"]()
+						if "user" in func.__code__.co_varnames[:func.__code__.co_argcount]:
+							return user.__urls__["bad_cookie"](user)
+						else:
+							return user.__urls__["bad_cookie"]()
 					return "Mauvaise methode de requete"
 			return func(user)
 		return verif
@@ -120,24 +126,27 @@ class User:
 			accept = "text/"+extension
 		return accept
 
-class Process(Thread):
+class Process():
 
 	def __init__(self,page,client,infos,urls={}):
-		Thread.__init__(self)
 		self.page = page
 		self.client = client
 		self.infos = infos
+		self.__urls__ = urls
 
-	def run(self):
+	def do(self):
 
 		user = self.create_user()
 		cookies = ""
 
 		if type(self.page) == str:
-			if self.page.startswith("/file/"):
-				reponse = find_file(self.page[5:])
+			if self.page.startswith("/files/"):
+				reponse = find_file(self.page[6:])
 		else:
-			reponse = self.page(user)
+			if "user" in self.page.__code__.co_varnames[:self.page.__code__.co_argcount]:
+				reponse = self.page(user)
+			else:
+				reponse = self.pages()
 			for i,j in user.cookies_to_set.items():
 				cookies += "Set-Cookie: "+str(i)+"="+str(j)+"\r\n"
 			for i in user.cookies_to_delete:
@@ -156,6 +165,46 @@ class Process(Thread):
 		user = User(self.infos,request,self.__urls__)
 		return user
 
+class Recv(Thread):
+
+	def __init__(self,url,connect_client):
+		Thread.__init__(self)
+		self.url = url
+		self.connect_client = connect_client
+		self.start()
+
+	def run(self):
+		connect_client = self.connect_client
+
+		infos = connect_client.recv(16777216).decode("utf-8")
+		data = infos.split("\r\n")
+		protocol = data[0].split(" ")
+		#print(infos)
+
+		try:
+			request_page = protocol[1].split("?")[0]
+		except:
+			return
+
+		print("Request : "+request_page)
+
+		if request_page.startswith("/files/"):
+			print("Result : Okay")
+			client = Process(request_page,connect_client,infos,self.url)
+			client.do()
+		elif request_page in self.url:
+			print("Result : Okay")
+			client = Process(self.url[request_page],connect_client,infos,self.url)
+			client.do()
+		else:
+			print("Result : Not Found")
+			if "error" in self.url:
+				client = Process(self.url["error"],connect_client,infos,self.url)
+				client.do()
+			connect_client.send("HTTP/1.1 404 Not Found\n\n<html><body><center><h3>Error 404</h3></center></body></html>".encode('utf-8'))
+			connect_client.close()
+
+
 class Listening(Thread):
 
 	def __init__(self,url,socket):
@@ -163,6 +212,7 @@ class Listening(Thread):
 		self.url = url
 		self.socket = socket
 		self.work = 0
+		self.start()
 
 	def run(self):
 
@@ -174,33 +224,7 @@ class Listening(Thread):
 			except OSError:
 				self.work = 0
 				return
-			infos = connect_client.recv(16777216).decode("utf-8")
-			data = infos.split("\r\n")
-			protocol = data[0].split(" ")
-			#print(infos)
-
-			try:
-				request_page = protocol[1].split("?")[0]
-			except:
-				continue
-
-			print("Request : "+request_page)
-
-			if request_page.startswith("/file/"):
-				print("Result : Okay")
-				client = Process(request_page,connect_client,infos)
-				client.start()
-			elif request_page in self.url:
-				print("Result : Okay")
-				client = Process(self.url[request_page],connect_client,infos)
-				client.start()
-			else:
-				print("Result : Not Found")
-				if "error" in self.url:
-					client = Process(self.url["error"],connect_client,infos)
-					return client.start()
-				connect_client.send("HTTP/1.1 404 Not Found\n\n<html><body><center><h3>Error 404</h3></center></body></html>".encode('utf-8'))
-				connect_client.close()
+			Recv(self.url,connect_client)
 
 class Server():
 
@@ -209,6 +233,7 @@ class Server():
 		self.port = port
 		self.url = {}
 		self.socket = None
+		self.work = 0
 
 	def path(self,adress):
 
@@ -221,19 +246,18 @@ class Server():
 		return add_fonction
 
 	def start(self):
+		self.work = 1
 
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.socket.bind((self.host,self.port))
 		self.socket.listen(10)
 		
-		print("Server Start")
+		print("Starting Server")
 
 		serv = Listening(self.url,self.socket)
 
-		serv.start()
-
 		try:
-			while 1:
+			while self.work:
 				pass
 		except KeyboardInterrupt:
 			self.stop()
@@ -243,3 +267,4 @@ class Server():
 	def stop(self):
 		if self.socket:
 			self.socket.close()
+			self.work = 0
