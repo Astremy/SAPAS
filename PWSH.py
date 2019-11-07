@@ -53,7 +53,7 @@ def need_cookies(*args):
 
 def find_file(filename):
 	try:
-		with open("files/"+filename,"r") as file:
+		with open("files/"+filename,"rb") as file:
 			data = file.read()
 			return data
 	except:
