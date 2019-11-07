@@ -52,3 +52,7 @@ Correction de différents bugs. L'on est plus obligé de passer en argument "use
 1.1.2:
 
 Ajout d'un message dans la console si l'on ne retourne rien. Ajout de la possibilité de retourner directement une réponse encodée.
+
+1.1.3:
+
+Ajout de la recherche par défaut d'un favicon dans les fichiers
