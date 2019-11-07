@@ -49,3 +49,6 @@ Refonte d'une partie de la reception des requetes. Mise en place de la possibili
 
 Correction de différents bugs. L'on est plus obligé de passer en argument "user" si l'on ne l'utilise pas. Utilisation de "files/truc.css" pour demander un fichier, plus "file/truc.css" -> mise en accord avec le nom du dossier
 
+1.1.2:
+
+Ajout d'un message dans la console si l'on ne retourne rien. Ajout de la possibilité de retourner directement une réponse encodée.
