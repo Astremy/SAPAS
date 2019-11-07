@@ -251,6 +251,10 @@ class Server():
 		self.socket = None
 		self.work = 0
 
+		@self.path("/favicon.ico")
+		def favicon(user):
+			return find_file(user,"favicon.ico")
+
 	def path(self,adress):
 
 		def add_fonction(function):
