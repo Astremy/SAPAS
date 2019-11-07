@@ -156,7 +156,7 @@ class Process():
 			print("Aucun retour")
 			return self.client.close()
 
-		elif type(reponse) == "bytes":
+		elif type(reponse) == type(b""):
 
 			response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: "+user.accept+"\r\n"+cookies+"\r\n"
 			self.client.send(response_to_client.encode()+reponse)
