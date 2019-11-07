@@ -152,6 +152,7 @@ class Process():
 			for i in user.cookies_to_delete:
 				cookies += "Set-Cookie: "+str(i)+"=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n"
 
+		#print("Reponse : ",response_to_client)
 		if reponse == None:
 			print("Aucun retour")
 			return self.client.close()
@@ -198,13 +199,13 @@ class Recv(Thread):
 
 		print("Request : "+request_page)
 
-		if request_page.startswith("/files/"):
-			print("Result : Okay")
-			client = Process(request_page,connect_client,infos,self.url)
-			client.do()
-		elif request_page in self.url:
+		if request_page in self.url:
 			print("Result : Okay")
 			client = Process(self.url[request_page],connect_client,infos,self.url)
+			client.do()
+		elif request_page.startswith("/files/"):
+			print("Result : Okay")
+			client = Process(request_page,connect_client,infos,self.url)
 			client.do()
 		else:
 			print("Result : Not Found")
