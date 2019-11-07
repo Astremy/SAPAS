@@ -152,9 +152,19 @@ class Process():
 			for i in user.cookies_to_delete:
 				cookies += "Set-Cookie: "+str(i)+"=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n"
 
-		response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: "+user.accept+"\r\n"+cookies+"\r\n"+reponse
-		#print("Reponse : ",response_to_client)
-		self.client.send(response_to_client.encode("utf-8"))
+		if reponse == None:
+			print("Aucun retour")
+			return self.client.close()
+
+		elif type(reponse) == "bytes":
+
+			response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: "+user.accept+"\r\n"+cookies+"\r\n"
+			self.client.send(response_to_client.encode()+reponse)
+
+		else:
+			response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: "+user.accept+"\r\n"+cookies+"\r\n"+str(reponse)
+			self.client.send(response_to_client.encode())
+
 		self.client.close()
 
 	def create_user(self):
