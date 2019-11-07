@@ -1,6 +1,8 @@
 import socket
 from threading import Thread
 
+default_filestypes = {".css":"text/css",".pdf":"application/pdf",".rar":"application/x-rar-compressed",".ico":"image/x-icon",".js":"application/javascript",".html":"text/html"}
+
 def redirect(url):
 	return "<script>window.location.href='"+url+"';</script>"
 
@@ -51,8 +53,11 @@ def need_cookies(*args):
 		return verif
 	return methods_verif
 
-def find_file(filename):
+def find_file(user,filename):
 	try:
+		for ending in default_filestypes:
+			if filename.endswith(ending):
+				user.accept = default_filestypes[ending]
 		with open("files/"+filename,"rb") as file:
 			data = file.read()
 			return data
@@ -141,7 +146,7 @@ class Process():
 
 		if type(self.page) == str:
 			if self.page.startswith("/files/"):
-				reponse = find_file(self.page[6:])
+				reponse = find_file(user,self.page[6:])
 		else:
 			if "user" in self.page.__code__.co_varnames[:self.page.__code__.co_argcount]:
 				reponse = self.page(user)
