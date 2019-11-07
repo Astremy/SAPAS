@@ -55,4 +55,4 @@ Ajout d'un message dans la console si l'on ne retourne rien. Ajout de la possibi
 
 1.1.3:
 
-Ajout de la recherche par défaut d'un favicon dans les fichiers
+Corrections de bugs. Possibilité de faire télécharger des fichiers beaucoup plus facilement. Ajout de la recherche par défaut d'un favicon dans les fichiers
