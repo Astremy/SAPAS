@@ -25,29 +25,33 @@ def template(filename,**kwargs):
 
 def methods(*args):
 	def methods_verif(func):
-		def verif(user):
+		def verif(user,var=None):
 			if user.request.method in args:
 				return func(user)
 			else:
 				if "bad_request" in user.__urls__:
+					args = []
 					if "user" in func.__code__.co_varnames[:func.__code__.co_argcount]:
-						return user.__urls__["bad request"](user)
-					else:
-						return user.__urls__["bad request"]()
+						args.append(user)
+					if var:
+						args.append(var)
+					return user.__urls__["bad request"](*args)
 				return "Mauvaise methode de requete"
 		return verif
 	return methods_verif
 
 def need_cookies(*args):
 	def methods_verif(func):
-		def verif(user):
+		def verif(user,var=None):
 			for arg in args:
 				if arg not in user.cookies.keys():
 					if "bad_cookie" in user.__urls__:
+						args = []
 						if "user" in func.__code__.co_varnames[:func.__code__.co_argcount]:
-							return user.__urls__["bad_cookie"](user)
-						else:
-							return user.__urls__["bad_cookie"]()
+							args.append(user)
+						if var:
+							args.append(var)
+						return user.__urls__["bad_cookie"](*args)
 					return "Mauvaise methode de requete"
 			return func(user)
 		return verif
@@ -133,11 +137,12 @@ class User:
 
 class Process():
 
-	def __init__(self,page,client,infos,urls={}):
+	def __init__(self,page,client,infos,urls={},var=None):
 		self.page = page
 		self.client = client
 		self.infos = infos
 		self.__urls__ = urls
+		self.var = var
 
 	def do(self):
 
@@ -148,10 +153,12 @@ class Process():
 			if self.page.startswith("/files/"):
 				reponse = find_file(user,self.page[6:])
 		else:
+			args = []
 			if "user" in self.page.__code__.co_varnames[:self.page.__code__.co_argcount]:
-				reponse = self.page(user)
-			else:
-				reponse = self.pages()
+				args.append(user)
+			if self.var:
+				args.append(self.var)
+			reponse = self.page(*args)
 			for i,j in user.cookies_to_set.items():
 				cookies += "Set-Cookie: "+str(i)+"="+str(j)+"\r\n"
 			for i in user.cookies_to_delete:
@@ -172,6 +179,8 @@ class Process():
 			self.client.send(response_to_client.encode())
 
 		self.client.close()
+
+		return True
 
 	def create_user(self):
 		data = self.infos.split("\r\n")
@@ -204,35 +213,56 @@ class Recv(Thread):
 
 		print("Request : "+request_page)
 
+		if self.test_page(request_page,connect_client,infos):
+			return
+
+		tests_pages = request_page.split("/")
+
+		for i in range(len(tests_pages)-1):
+			i = i+1
+			if i > 1:
+				a = "/".join(tests_pages[:-i]+["___"]+tests_pages[-(i-1):])
+				if self.test_page(a,connect_client,infos,var=tests_pages[-i]):
+					return
+			a = "/".join(tests_pages[:-i]+["___"])
+			if self.test_page(a,connect_client,infos,var="/".join(tests_pages[-i:])):
+				return
+
+		print("Result : Not Found")
+		connect_client.send("HTTP/1.1 404 Not Found\n\n<html><body><center><h3>Error 404</h3></center></body></html>".encode('utf-8'))
+		return connect_client.close()
+
+	def test_page(self,request_page,connect_client,infos,var=None):
 		if request_page in self.url:
 			print("Result : Okay")
-			client = Process(self.url[request_page],connect_client,infos,self.url)
-			client.do()
+			client = Process(self.url[request_page],connect_client,infos,self.url,var=var)
+			return client.do()
 		elif request_page.startswith("/files/"):
 			print("Result : Okay")
-			client = Process(request_page,connect_client,infos,self.url)
-			client.do()
+			client = Process(request_page,connect_client,infos,self.url,var=var)
+			return client.do()
 		else:
-			print("Result : Not Found")
 			if "error" in self.url:
-				client = Process(self.url["error"],connect_client,infos,self.url)
-				client.do()
-			connect_client.send("HTTP/1.1 404 Not Found\n\n<html><body><center><h3>Error 404</h3></center></body></html>".encode('utf-8'))
-			connect_client.close()
+				print("Result : Not Found")
+				client = Process(self.url["error"],connect_client,infos,self.url,var=var)
+				return client.do()
 
 
 class Listening(Thread):
 
-	def __init__(self,url,socket):
+	def __init__(self,host,port,serv):
 		Thread.__init__(self)
-		self.url = url
-		self.socket = socket
+		self.serv = serv
+		self.host = host
+		self.port = port
 		self.work = 0
-		self.start()
+		self.socket = None
 
 	def run(self):
 
-		self.work = 1
+		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.socket.bind((self.host,self.port))
+		self.socket.listen(10)
 
 		while self.work:
 			try:
@@ -245,11 +275,8 @@ class Listening(Thread):
 class Server():
 
 	def __init__(self,host,port):
-		self.host = host
-		self.port = port
 		self.url = {}
-		self.socket = None
-		self.work = 0
+		self.listen = Listening(host,port,self)
 
 		@self.path("/favicon.ico")
 		def favicon(user):
@@ -259,32 +286,31 @@ class Server():
 
 		def add_fonction(function):
 
-			self.url[adress] = function
+			if adress.format(var="___") != adress:
+				self.url[adress.format(var="___")] = function
+
+			else:
+				self.url[adress] = function
 
 			return function
 
 		return add_fonction
 
 	def start(self):
-		self.work = 1
-
-		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.socket.bind((self.host,self.port))
-		self.socket.listen(10)
 		
 		print("Starting Server")
 
-		serv = Listening(self.url,self.socket)
+		self.listen.start()
+		self.listen.work = 1
 
 		try:
-			while self.work:
+			while self.listen.work:
 				pass
 		except KeyboardInterrupt:
 			self.stop()
 
-		print("Stopping Server")
-
 	def stop(self):
-		if self.socket:
-			self.socket.close()
-			self.work = 0
+
+		if self.listen.socket:
+			print("Stopping Server")
+			self.listen.socket.close()
