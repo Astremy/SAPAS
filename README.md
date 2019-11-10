@@ -57,6 +57,10 @@ Ajout d'un message dans la console si l'on ne retourne rien. Ajout de la possibi
 
 Corrections de bugs. Possibilité de faire télécharger des fichiers beaucoup plus facilement. Ajout de la recherche par défaut d'un favicon dans les fichiers
 
+1.2.0:
+
+Changement en partie du fonctionnement du Framework, ajout d'une façon d'avoir des url non totalement déterminés (ex : "/user/{var}/profile", "/product/{var}") avec en argument de la fonction var. 
+
 
 
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
