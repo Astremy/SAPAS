@@ -33,13 +33,13 @@ def redirect(url):
 def template(filename,**kwargs):
 
 	'''
-	Search a file in 'template' folder, and return the data.
+	Search a file in 'templates' folder, and return the data.
 	Format with the kwargs, and add others files if he contain
 	'&&&file.html&&&'
 	'''
 
 	try:
-		with open("templates/"+filename,"r") as file:
+		with open("templates/"+filename,"r",encoding="utf-8") as file:
 			data = file.read()
 			response = data.format(**kwargs)
 			def search(response):
@@ -247,11 +247,11 @@ class Process():
 		elif type(response) == type(b""):
 
 			response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: "+user.accept+"\r\n"+cookies+"\r\n"
-			self.client.send(response_to_client.encode()+response)
+			self.client.send(response_to_client.encode("latin-1")+response)
 
 		else:
 			response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: "+user.accept+"\r\n"+cookies+"\r\n"+str(response)
-			self.client.send(response_to_client.encode())
+			self.client.send(response_to_client.encode("latin-1"))
 
 		self.client.close()
 
