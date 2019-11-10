@@ -61,6 +61,8 @@ Corrections de bugs. Possibilité de faire télécharger des fichiers beaucoup p
 
 Changement en partie du fonctionnement du Framework, ajout d'une façon d'avoir des url non totalement déterminés (ex : "/user/{var}/profile", "/product/{var}") avec en argument de la fonction var. 
 
+1.3.0:
 
+Ajout de commentaires pour expliquer le fonctionnement du framework. Reglage de nombreux bugs.
 
 <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
