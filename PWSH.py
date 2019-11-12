@@ -19,6 +19,8 @@ def execute_func(function,**kwargs):
 	for var in function.__code__.co_varnames[:function.__code__.co_argcount]:
 		if var in kwargs and kwargs[var]:
 			send[var] = kwargs[var]
+		else:
+			send[var] = None
 
 	return function(**send)
 
@@ -105,7 +107,7 @@ def find_file(user,filename):
 			data = file.read()
 			return data
 	except:
-		return ""
+		return b""
 
 class Request():
 
@@ -252,17 +254,11 @@ class Process():
 		elif type(response) == type(b""):
 
 			response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: "+user.accept+"\r\n"+cookies+"\r\n"
-			if self.use_unicode:
-				self.client.send(response_to_client+response.decode())
-			else:
-				self.client.send(response_to_client.encode("latin-1")+response)
+			self.client.send(response_to_client.encode("latin-1")+response)
 
 		else:
 			response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: "+user.accept+"\r\n"+cookies+"\r\n"+str(response)
-			if self.use_unicode:
-				self.client.send(response_to_client)
-			else:
-				self.client.send(response_to_client.encode("latin-1"))
+			self.client.send(response_to_client.encode("latin-1"))
 
 		self.client.close()
 
@@ -305,6 +301,9 @@ class Recv(Thread):
 
 		if not self.use_unicode:
 			infos = infos.decode()
+
+		if infos == "":
+			return
 
 		data = infos.split("\r\n")
 		protocol = data[0].split(" ")
