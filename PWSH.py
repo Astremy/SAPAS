@@ -391,7 +391,7 @@ class Server():
 		'''
 
 		self.url = {}
-		self.listen = Listening(host,port)
+		self.listen = Listening(host,port,self)
 
 		@self.path("/favicon.ico")
 		def favicon(user):
