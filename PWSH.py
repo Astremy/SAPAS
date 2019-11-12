@@ -209,12 +209,13 @@ class User:
 
 class Process():
 
-	def __init__(self,page,client,infos,urls={},var=None):
+	def __init__(self,page,client,infos,urls,use_unicode,var=None):
 		self.page = page
 		self.client = client
 		self.infos = infos
 		self.__urls__ = urls
 		self.var = var
+		self.use_unicode = use_unicode
 
 	def do(self):
 
@@ -251,11 +252,17 @@ class Process():
 		elif type(response) == type(b""):
 
 			response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: "+user.accept+"\r\n"+cookies+"\r\n"
-			self.client.send(response_to_client.encode("latin-1")+response)
+			if self.use_unicode:
+				self.client.send(response_to_client+response.decode())
+			else:
+				self.client.send(response_to_client.encode("latin-1")+response)
 
 		else:
 			response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: "+user.accept+"\r\n"+cookies+"\r\n"+str(response)
-			self.client.send(response_to_client.encode("latin-1"))
+			if self.use_unicode:
+				self.client.send(response_to_client)
+			else:
+				self.client.send(response_to_client.encode("latin-1"))
 
 		self.client.close()
 
@@ -327,7 +334,7 @@ class Recv(Thread):
 
 		print("Result : Not Found")
 
-		client = Process(self.url["error"],connect_client,infos,self.url,var=None)
+		client = Process(self.url["error"],connect_client,infos,self.url,self.use_unicode,var=None)
 		return client.do()
 
 	def test_page(self,request_page,connect_client,infos,var=None):
@@ -338,12 +345,12 @@ class Recv(Thread):
 
 		if request_page in self.url:
 			print("Result : Okay")
-			client = Process(self.url[request_page],connect_client,infos,self.url,var=var)
+			client = Process(self.url[request_page],connect_client,infos,self.url,self.use_unicode,var=var)
 			return client.do()
 
 		elif request_page.startswith("/files/"):
 			print("Result : Okay")
-			client = Process(request_page,connect_client,infos,self.url,var=var)
+			client = Process(request_page,connect_client,infos,self.url,self.use_unicode,var=var)
 			return client.do()
 
 
