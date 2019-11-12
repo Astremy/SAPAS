@@ -276,10 +276,11 @@ class Process():
 
 class Recv(Thread):
 
-	def __init__(self,url,connect_client):
+	def __init__(self,url,connect_client,use_unicode):
 		Thread.__init__(self)
 		self.url = url
 		self.connect_client = connect_client
+		self.use_unicode = use_unicode
 		self.start()
 
 	def run(self):
@@ -293,13 +294,10 @@ class Recv(Thread):
 
 		connect_client = self.connect_client
 
-		infos = ""
+		infos = connect_client.recv(33554432)
 
-		data_recv = connect_client.recv(4096).decode()
-
-		while data_recv != "":
-			infos += data_recv
-			data_recv = connect_client.recv(4096).decode()
+		if not self.use_unicode:
+			infos = infos.decode()
 
 		data = infos.split("\r\n")
 		protocol = data[0].split(" ")
@@ -351,13 +349,14 @@ class Recv(Thread):
 
 class Listening(Thread):
 
-	def __init__(self,host,port,serv):
+	def __init__(self,host,port,serv,use_unicode):
 		Thread.__init__(self)
 		self.serv = serv
 		self.host = host
 		self.port = port
 		self.work = 0
 		self.socket = None
+		self.use_unicode = use_unicode
 
 	def run(self):
 
@@ -377,18 +376,18 @@ class Listening(Thread):
 			except OSError:
 				self.work = 0
 				return
-			Recv(self.serv.url,connect_client)
+			Recv(self.serv.url,connect_client,self.use_unicode)
 
 class Server():
 
-	def __init__(self,host,port):
+	def __init__(self,host,port,use_unicode=False):
 
 		'''
 		Create the server, and add a default path for the favicon
 		'''
 
 		self.url = {}
-		self.listen = Listening(host,port,self)
+		self.listen = Listening(host,port,self,use_unicode)
 
 		@self.path("/favicon.ico")
 		def favicon(user):
