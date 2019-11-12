@@ -4,6 +4,7 @@ Module created by Astremy
 
 import socket
 from threading import Thread
+import time
 
 default_filestypes = {".css":"text/css",".pdf":"application/pdf",".rar":"application/x-rar-compressed",".ico":"image/x-icon",".js":"application/javascript",".html":"text/html"}
 
@@ -211,13 +212,12 @@ class User:
 
 class Process():
 
-	def __init__(self,page,client,infos,urls,use_unicode,var=None):
+	def __init__(self,page,client,infos,urls,var=None):
 		self.page = page
 		self.client = client
 		self.infos = infos
 		self.__urls__ = urls
 		self.var = var
-		self.use_unicode = use_unicode
 
 	def do(self):
 
@@ -279,11 +279,10 @@ class Process():
 
 class Recv(Thread):
 
-	def __init__(self,url,connect_client,use_unicode):
+	def __init__(self,url,connect_client):
 		Thread.__init__(self)
 		self.url = url
 		self.connect_client = connect_client
-		self.use_unicode = use_unicode
 		self.start()
 
 	def run(self):
@@ -299,7 +298,7 @@ class Recv(Thread):
 
 		infos = connect_client.recv(33554432)
 
-		if not self.use_unicode:
+		if not type(infos) == "str":
 			infos = infos.decode()
 
 		if infos == "":
@@ -333,7 +332,7 @@ class Recv(Thread):
 
 		print("Result : Not Found")
 
-		client = Process(self.url["error"],connect_client,infos,self.url,self.use_unicode,var=None)
+		client = Process(self.url["error"],connect_client,infos,self.url,var=None)
 		return client.do()
 
 	def test_page(self,request_page,connect_client,infos,var=None):
@@ -344,25 +343,24 @@ class Recv(Thread):
 
 		if request_page in self.url:
 			print("Result : Okay")
-			client = Process(self.url[request_page],connect_client,infos,self.url,self.use_unicode,var=var)
+			client = Process(self.url[request_page],connect_client,infos,self.url,var=var)
 			return client.do()
 
 		elif request_page.startswith("/files/"):
 			print("Result : Okay")
-			client = Process(request_page,connect_client,infos,self.url,self.use_unicode,var=var)
+			client = Process(request_page,connect_client,infos,self.url,var=var)
 			return client.do()
 
 
 class Listening(Thread):
 
-	def __init__(self,host,port,serv,use_unicode):
+	def __init__(self,host,port,serv):
 		Thread.__init__(self)
 		self.serv = serv
 		self.host = host
 		self.port = port
 		self.work = 0
 		self.socket = None
-		self.use_unicode = use_unicode
 
 	def run(self):
 
@@ -382,18 +380,18 @@ class Listening(Thread):
 			except OSError:
 				self.work = 0
 				return
-			Recv(self.serv.url,connect_client,self.use_unicode)
+			Recv(self.serv.url,connect_client)
 
 class Server():
 
-	def __init__(self,host,port,use_unicode=False):
+	def __init__(self,host,port):
 
 		'''
 		Create the server, and add a default path for the favicon
 		'''
 
 		self.url = {}
-		self.listen = Listening(host,port,self,use_unicode)
+		self.listen = Listening(host,port)
 
 		@self.path("/favicon.ico")
 		def favicon(user):
@@ -437,7 +435,7 @@ class Server():
 
 		try:
 			while self.listen.work:
-				pass
+				time.sleep(10)
 		except KeyboardInterrupt:
 			self.stop()
 
