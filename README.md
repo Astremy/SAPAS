@@ -1,6 +1,6 @@
 # Python-Web-Site-Helper
 
-Version 1.1.0
+Version 1.1.3
 
 ChangeLog : 
 
