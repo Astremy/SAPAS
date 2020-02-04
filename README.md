@@ -1,6 +1,6 @@
-# Python-Web-Site-Helper
+# Socket Advanced Python Assistant for Site
 
-## [Wiki](https://github.com/Astremy/PWSH/wiki)
+## [Wiki](https://github.com/Astremy/SAPAS/wiki)
 
 Version 1.3.3
 
