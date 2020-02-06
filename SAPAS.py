@@ -25,13 +25,22 @@ def execute_func(function,**kwargs):
 
 	return function(**send)
 
-def redirect(url):
+def redirect(user,url, permanent=False):
 	
 	'''
 	Just a script for redirect to an another page
 	'''
+	if permanent:
+		user.response["code"] = 308
+		user.response["message"] = "Permanent Redirect"
+	else:
+		user.response["code"] = 307
+		user.response["message"] = "Temporary Redirect"
 
-	return "<script>window.location.href='"+url+"';</script>"
+	user.headers["Location"] = url
+
+	return ""
+	#return "<script>window.location.href='"+url+"';</script>"
 
 def template(filename,**kwargs):
 
@@ -69,6 +78,8 @@ def methods(*args):
 			if user.request.method in args:
 				return func(user)
 			else:
+				user.response["code"] = 405
+				user.response["message"] = "Method Not Allowed"
 				if "bad_request" in user.__urls__:
 					return execute_func(function=user.__urls__["bad_request"],user=user,var=var)
 				return "Mauvaise methode de requete"
@@ -86,6 +97,8 @@ def need_cookies(*args):
 		def verif(user,var):
 			for arg in args:
 				if arg not in user.cookies.keys():
+					user.response["code"] = 403
+					user.response["message"] = "Forbidden"
 					if "bad_cookie" in user.__urls__:
 						return execute_func(function=user.__urls__["bad_cookie"],user=user,var=var)
 					return "Mauvaise methode de requete"
@@ -156,7 +169,8 @@ class User:
 		self.cookies = self.get_cookies()
 		self.cookies_to_set = {}
 		self.cookies_to_delete = []
-		self.accept = self.search_accept(infos)
+		self.headers = {"Content-Type":self.search_accept(infos)}
+		self.response = {"code":200, "message":"OK"}
 		self.__urls__ = __urls__
 
 	def set_cookie(self,cookie,value):
@@ -201,7 +215,7 @@ class User:
 
 		try:
 			zone = infos.split("Accept: ")[1]
-			accept = zone.split(",")[0]
+			accept = zone.split("\n")[0].split(",")[0]
 		except:
 			data = infos.split("\r\n")
 			data = data[0].split(" ")
@@ -228,6 +242,11 @@ class Process():
 		'''
 
 		user = self.create_user()
+
+		if self.page == "error":
+			user.response["code"] = 404
+			user.response["message"] = "Not Found"
+
 		cookies = ""
 
 		response = None
@@ -244,21 +263,21 @@ class Process():
 			for i in user.cookies_to_delete:
 				cookies += "Set-Cookie: "+str(i)+"=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT\r\n"
 
-
-
 		#print("Reponse : ",response_to_client)
 		if response == None:
 			print("Aucun retour")
 			return
 
-		elif type(response) == type(b""):
-
-			response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: "+user.accept+"\r\n"+cookies+"\r\n"
-			self.client.send(response_to_client.encode("latin-1")+response)
-
 		else:
-			response_to_client = "HTTP/1.0 200 OK\r\nContent-Type: "+user.accept+"\r\n"+cookies+"\r\n"+str(response)
-			self.client.send(response_to_client.encode("latin-1"))
+
+			headers = '\r\n'.join([f"{header}: {value}" for header,value in user.headers.items()])
+			response_to_client = f"HTTP/1.1 {user.response['code']} {user.response['message']}\r\n{headers}\r\n{cookies}\r\n"
+
+			if type(response) == type(b""):
+				self.client.send(response_to_client.encode("latin-1")+response)
+			else:
+				response_to_client += f"{response}"
+				self.client.send(response_to_client.encode("latin-1"))
 
 		self.client.close()
 
