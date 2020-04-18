@@ -243,7 +243,7 @@ class Process():
 
 		user = self.create_user()
 
-		if self.page == "error":
+		if self.page == self.__urls__["error"]:
 			user.response["code"] = 404
 			user.response["message"] = "Not Found"
 
