@@ -82,7 +82,7 @@ def methods(*args):
 				user.response["message"] = "Method Not Allowed"
 				if "bad_request" in user.__urls__:
 					return execute_func(function=user.__urls__["bad_request"],user=user,var=var)
-				return "Mauvaise methode de requete"
+				return "Method Not Allowed"
 		return verif
 	return methods_verif
 
@@ -101,7 +101,7 @@ def need_cookies(*args):
 					user.response["message"] = "Forbidden"
 					if "bad_cookie" in user.__urls__:
 						return execute_func(function=user.__urls__["bad_cookie"],user=user,var=var)
-					return "Mauvaise methode de requete"
+					return "Forbidden"
 			return func(user)
 		return verif
 	return methods_verif
@@ -265,7 +265,7 @@ class Process():
 
 		#print("Reponse : ",response_to_client)
 		if response == None:
-			print("Aucun retour")
+			print("No Response")
 			return
 
 		else:
