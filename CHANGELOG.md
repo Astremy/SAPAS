@@ -72,3 +72,7 @@ Réglage de bugs.
 1.3.3:
 
 Amélioration de l'utilisation du processeur : Consomme moins de CPU
+
+1.4.0:
+Revision of response code system (404, 301, 200)..
+Upgrade redirect function.
