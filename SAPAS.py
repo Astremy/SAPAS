@@ -76,7 +76,7 @@ def methods(*args):
 	def methods_verif(func):
 		def verif(user,var):
 			if user.request.method in args:
-				return func(user)
+				return execute_func(function=func,user=user,var=var)
 			else:
 				user.response["code"] = 405
 				user.response["message"] = "Method Not Allowed"
@@ -102,7 +102,7 @@ def need_cookies(*args):
 					if "bad_cookie" in user.__urls__:
 						return execute_func(function=user.__urls__["bad_cookie"],user=user,var=var)
 					return "Forbidden"
-			return func(user)
+			return execute_func(function=func,user=user,var=var)
 		return verif
 	return methods_verif
 
