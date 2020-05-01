@@ -4,7 +4,8 @@
 
 ## [Wiki](https://github.com/Astremy/SAPAS/wiki)
 
-SAPAS is a python framework made to make websites easily.It has a use close to that of [flask](https://github.com/pallets/flask).
+SAPAS is a python framework made to make websites easily.
+It has a use close to that of [flask](https://github.com/pallets/flask).
 
 To use it, you just have to put it in the current folder of your project and then import it
 
