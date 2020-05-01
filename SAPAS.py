@@ -274,10 +274,10 @@ class Process():
 			response_to_client = f"HTTP/1.1 {user.response['code']} {user.response['message']}\r\n{headers}\r\n{cookies}\r\n"
 
 			if type(response) == type(b""):
-				self.client.send(response_to_client.encode("latin-1")+response)
+				self.client.send(response_to_client.encode("latin-1","ignore")+response)
 			else:
 				response_to_client += f"{response}"
-				self.client.send(response_to_client.encode("latin-1"))
+				self.client.send(response_to_client.encode("latin-1","ignore"))
 
 		self.client.close()
 
